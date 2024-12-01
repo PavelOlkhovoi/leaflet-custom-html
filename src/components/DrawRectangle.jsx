@@ -8,7 +8,6 @@ const DrawRectangle = () => {
   const counter = useRef(0);
 
   const handlerClick = (e, map) => {
-    console.log(counter);
     const { lat, lng } = e.latlng;
     const coord = [...polCoord.current, [lat, lng]];
     polCoord.current = coord;
@@ -17,11 +16,12 @@ const DrawRectangle = () => {
       const newCoord = [...polCoord.current, [lat, lng], polCoord.current[0]];
       const polygon = L.polygon(newCoord, { color: "red" }).addTo(map);
       const bounds = polygon.getBounds();
+      console.log(bounds);
 
       const { _northEast, _southWest } = bounds;
       const northEast = map.latLngToLayerPoint(_northEast);
       const southWest = map.latLngToLayerPoint(_southWest);
-      const nordWest = {
+      const northWest = {
         x: southWest.x,
         y: northEast.y,
       };
@@ -30,7 +30,7 @@ const DrawRectangle = () => {
         y: southWest.y,
       };
 
-      setPrevSizes(nordWest, northEast, southWest);
+      setPrevSizes(northWest, northEast, southWest);
 
       counter.current = 0;
       polCoord.current = [];
