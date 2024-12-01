@@ -1,6 +1,6 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { TopicMapContext } from "react-cismap/contexts/TopicMapContextProvider";
-import { changeLefTopPos } from "../helper/rectHelper";
+import { setPrevSizes } from "../helper/rectHelper";
 
 const DrawRectangle = () => {
   const { routedMapRef } = useContext(TopicMapContext);
@@ -12,54 +12,53 @@ const DrawRectangle = () => {
     const { lat, lng } = e.latlng;
     const coord = [...polCoord.current, [lat, lng]];
     polCoord.current = coord;
-    console.log("xxx ...", e.layerPoint.x, e.layerPoint.y);
-    // changeLefTopPos(e.layerPoint.x, e.layerPoint.y);
     counter.current = counter.current + 1;
     if (counter.current === 4) {
       const newCoord = [...polCoord.current, [lat, lng], polCoord.current[0]];
       const polygon = L.polygon(newCoord, { color: "red" }).addTo(map);
-      const getB = polygon.getBounds();
+      const bounds = polygon.getBounds();
 
-      const { _northEast } = getB;
-      console.log("xxx", getB);
-      console.log("xxx _northEast", _northEast.lat, _northEast.lng);
-      // zoom the map to the polygon
-      // map.fitBounds(polygon.getBounds());
+      const { _northEast, _southWest } = bounds;
+      const northEast = map.latLngToLayerPoint(_northEast);
+      const southWest = map.latLngToLayerPoint(_southWest);
+      const nordWest = {
+        x: southWest.x,
+        y: northEast.y,
+      };
+      const southEast = {
+        x: northEast.x,
+        y: southWest.y,
+      };
 
-      const zoom = map.getZoom();
-      const { x, y } = map.latLngToLayerPoint(_northEast, zoom);
-      // console.log("xxx north", map.options.crs.latLngToPoint(_northEast, zoom));
-      console.log("xxx north", x, y);
-      changeLefTopPos(x, y);
+      setPrevSizes(nordWest, northEast, southWest);
 
       counter.current = 0;
       polCoord.current = [];
     }
   };
   useEffect(() => {
-    console.log("xxx");
     if (routedMapRef) {
       const map = routedMapRef.leafletMap.leafletElement;
       map.on("click", (e) => {
-        console.log("xxx click", e);
         handlerClick(e, map);
       });
     }
   }, [routedMapRef, counter]);
   return (
     <div
-      id="popa"
+      id="preview"
       style={{
         position: "absolute",
         zIndex: 10000,
-        // left: "0",
-        top: "0",
-        // right: "600",
-        // bottom: "400",
-        background: "red",
+        left: "1",
+        top: "1",
+        height: "0",
+        background: "blue",
+        opacity: 0.6,
+        color: "white",
       }}
     >
-      Test
+      Tooltip text
     </div>
   );
 };
