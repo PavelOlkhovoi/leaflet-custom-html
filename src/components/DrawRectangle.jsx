@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef } from "react";
 import { TopicMapContext } from "react-cismap/contexts/TopicMapContextProvider";
-import { setPrevSizes } from "../helper/rectHelper";
+import { getPolygonPoints, setPrevSizes } from "../helper/rectHelper";
 
 const DrawRectangle = () => {
   const { routedMapRef } = useContext(TopicMapContext);
@@ -15,32 +15,35 @@ const DrawRectangle = () => {
     if (counter.current === 4) {
       const newCoord = [...polCoord.current, [lat, lng], polCoord.current[0]];
       const polygon = L.polygon(newCoord, { color: "red" }).addTo(map);
-      const bounds = polygon.getBounds();
-      console.log(bounds);
 
-      const { _northEast, _southWest } = bounds;
-      const northEast = map.latLngToLayerPoint(_northEast);
-      const southWest = map.latLngToLayerPoint(_southWest);
-      const northWest = {
-        x: southWest.x,
-        y: northEast.y,
-      };
-      const southEast = {
-        x: northEast.x,
-        y: southWest.y,
-      };
+      polygon.customPrevId = "customPrevId";
 
-      setPrevSizes(northWest, northEast, southWest);
+      const origBound = polygon.getBounds();
+      map.fitBounds(origBound);
+
+      // const { northWest, northEast, southWest } = getPolygonPoints(map);
+
+      // setPrevSizes(northWest, northEast, southWest);
 
       counter.current = 0;
       polCoord.current = [];
     }
   };
+
   useEffect(() => {
     if (routedMapRef) {
       const map = routedMapRef.leafletMap.leafletElement;
       map.on("click", (e) => {
         handlerClick(e, map);
+      });
+
+      map.on("zoomend", (e) => {
+        console.log("xxx zoomend");
+        const { northWest, northEast, southWest } = getPolygonPoints(map);
+
+        if (northWest && northEast && southWest) {
+          setPrevSizes(northWest, northEast, southWest);
+        }
       });
     }
   }, [routedMapRef, counter]);
